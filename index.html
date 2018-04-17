@@ -50,5 +50,18 @@
     <script src="examples/third_party/jquery-3.2.1.slim.min.js"></script>
     <script src="examples/third_party/popper.min.js"></script>
     <script src="examples/third_party/bootstrap.min.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/webml-examples/sw.js').then(function(registration) {
+            // Registration was successful
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            // registration failed :(
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
