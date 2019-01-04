@@ -1,13 +1,13 @@
 const availableModels = [
   {
-    modelName: 'DeepLab 513',
-    modelFile: './model/deeplab_mobilenetv2_513.tflite',
+    modelName: 'DeepLab 257x257',
+    modelFile: './model/deeplab_mobilenetv2_257_dilated.tflite',
     labelsFile: './model/labels.txt',
-    inputSize: [513, 513, 3],
-    outputSize: [513, 513, 21],
+    inputSize: [257, 257, 3],
+    outputSize: [257, 257, 21],
   },
   {
-    modelName: 'DeepLab 513 Atrous',
+    modelName: 'DeepLab 513x513',
     modelFile: './model/deeplab_mobilenetv2_513_dilated.tflite',
     labelsFile: './model/labels.txt',
     inputSize: [513, 513, 3],
