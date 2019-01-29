@@ -33,14 +33,22 @@ class TFliteModelImporter {
 
     await this._model.finish();
     this._compilation = await this._model.createCompilation();
+
+    let start = performance.now();
     this._compilation.setPreference(getPreferCode(this._backend, this._prefer));
     await this._compilation.finish();
     this._execution = await this._compilation.createExecution();
+    let elapsed = performance.now() - start;
+    console.log(`compilation time: ${elapsed.toFixed(2)} ms`);
   }
 
-  async compute(inputTensor, outputTensor) {
-    this._execution.setInput(0, inputTensor);
-    this._execution.setOutput(0, outputTensor);
+  async compute(inputTensors, outputTensors) {
+    inputTensors.forEach((inputTensor, i) => {
+      this._execution.setInput(i, inputTensor);
+    });
+    outputTensors.forEach((outputTensor, i) => {
+      this._execution.setOutput(i, outputTensor);
+    });
 
     let error = await this._execution.startCompute();
     if (error) {
@@ -274,18 +282,12 @@ class TFliteModelImporter {
           opType = this._nn.FULLY_CONNECTED;
         } break;
         case tflite.BuiltinOperator.RESIZE_BILINEAR: {
-
+          let options = operator.builtinOptions(new tflite.ResizeBilinearOptions());
           let newSize = this._operands[inputs[1]];
-          let oldSize = graph.tensors(inputs[0]).shapeArray().slice(1, 3);
-          if (newSize[0] === oldSize[0] && newSize[1] === oldSize[1]) {
-            // skip RESIZE_BILINEAR with the same input and output shape
-            this._tensorIds[outputs[0]] = this._tensorIds[inputs[0]];
-            continue;
-          }
-
           inputs = [inputs[0]];
           inputs.push(this._addScalarInt32(newSize[0]));
           inputs.push(this._addScalarInt32(newSize[1]));
+          inputs.push(this._addScalarInt32(options.alignCorners() ? 1 : 0));
 
           opType = this._nn.RESIZE_BILINEAR;
         } break;

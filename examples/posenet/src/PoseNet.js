@@ -1,5 +1,5 @@
-class PoseNet{
-  constructor(modelArch, version, outputStride, inputShape, type, cacheMap, backend, prefer) {
+class PoseNet {
+  constructor(modelArch, version, useAtrousConv, outputStride, inputShape, type, cacheMap, backend, prefer) {
     this._modelArch = modelArch;
     this._model = null;
     this._compilation;
@@ -7,6 +7,7 @@ class PoseNet{
     this._tensorIds = [];
     this._operandIndex = 0;
     this._version = version;
+    this._useAtrousConv = useAtrousConv;
     this._outputStride = outputStride;
     this._inputShape = inputShape;
     this._outputLayer = [];
@@ -32,9 +33,13 @@ class PoseNet{
     await this._addTensorOperands();
     await this._model.finish();
     this._compilation = await this._model.createCompilation();
+
+    let start = performance.now();
     this._compilation.setPreference(getPreferCode(this._backend, this._prefer));
     await this._compilation.finish();
     this._execution = await this._compilation.createExecution();
+    let elapsed = performance.now() - start;
+    console.log(`compilation time: ${elapsed.toFixed(2)} ms`);
   }
 
   async computeSinglePose(inputTensor, heatmapTensor, offsetTensor) {
@@ -142,7 +147,7 @@ class PoseNet{
           outputLayerIndex++;
         }
         const data = await getDimensionData("separableConv", this._version, i, manifest, this._cacheMap);
-        if (this._modelArch[i].rate == 1) {
+        if (this._useAtrousConv || this._modelArch[i].rate === 1) { 
           dimensionWeights.push(reshape(data.shapeWeights[0]));
           dimensionWeights.push(reshape(data.shapeWeights[1]));
           weights.push(new Float32Array(transposeWeights(data.weights[0], data.shapeWeights[0])));
@@ -203,12 +208,19 @@ class PoseNet{
           const paddingCode = this._nn.PADDING_SAME;
           const fuseCode = this._nn.FUSED_RELU6;
           if (j == 0) {
-            const opType = this._nn.DEPTHWISE_CONV_2D;
+            let opType;
             const multiplier = 1;
             let outputs = this._outputLayer[outputLayerIndex];
             inputs.push(this._addScalarInt32(paddingCode));
-            inputs.push(this._addScalarInt32(this._modelArch[i].stride));
-            inputs.push(this._addScalarInt32(this._modelArch[i].stride));
+            if (this._useAtrousConv && this._modelArch[i].rate !== 1) {
+              inputs.push(this._addScalarInt32(this._modelArch[i].rate));
+              inputs.push(this._addScalarInt32(this._modelArch[i].rate));
+              opType = this._nn.ATROUS_DEPTHWISE_CONV_2D;
+            } else {
+              inputs.push(this._addScalarInt32(this._modelArch[i].stride));
+              inputs.push(this._addScalarInt32(this._modelArch[i].stride));
+              opType = this._nn.DEPTHWISE_CONV_2D;
+            }
             inputs.push(this._addScalarInt32(multiplier));
             inputs.push(this._addScalarInt32(fuseCode));
             this._model.addOperation(opType, inputs, [outputs]);
@@ -359,7 +371,7 @@ class PoseNet{
       let percentComplete = current / length *100;
       percentComplete = percentComplete.toFixed(0);
       progressBar.style = `width: ${percentComplete}%`;
-      progressBar.innerHTML = `${percentComplete}%`;
+      updateLoading(percentComplete);
     }
   }
 }
