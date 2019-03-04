@@ -64,7 +64,7 @@ const imageClassificationModels = [{
   modelSize: '170.7MB',
   inputSize: [299, 299, 3],
   outputSize: 1001,
-  modelFile: '../image_classification/model/inception_v4.tflite',
+  modelFile: 'https://belem.oss-cn-shanghai.aliyuncs.com/webml/model/ic/inception_v4.tflite',
   labelsFile: '../image_classification/model/labels1001.txt',
   preOptions: {
     mean: [127.5, 127.5, 127.5],
@@ -92,7 +92,7 @@ const imageClassificationModels = [{
   modelSize: '121.0MB',
   inputSize: [299, 299, 3],
   outputSize: 1001,
-  modelFile: '../image_classification/model/inception_resnet_v2.tflite',
+  modelFile: 'https://belem.oss-cn-shanghai.aliyuncs.com/webml/model/ic/inception_resnet_v2.tflite',
   labelsFile: '../image_classification/model/labels1001.txt',
   preOptions: {
     mean: [127.5, 127.5, 127.5],
