@@ -10,18 +10,18 @@ $(document).ready(() => {
     fpsToggle(false);
   }
 
-  updateTitle('Object Detection', ub, up, um, ut);
+  updateTitle('Facial Landmark Detection', ub, up, um, ut);
   
   $('input:radio[name=bp]').click(() => {
-    updateTitle('Object Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    updateTitle('Facial Landmark Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
   });
 
   $('input:radio[name=bw]').click(() => {
-    updateTitle('Object Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    updateTitle('Facial Landmark Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
   });
 
   $('input:radio[name=m]').click(() => {
-    updateTitle('Object Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    updateTitle('Facial Landmark Detection', currentBackend, currentPrefer, `${um}`, `${ut}`);
     $('.offload').hide();
   });
  
@@ -36,11 +36,8 @@ $(document).ready(() => {
     utilsPredict(imageElement, currentBackend, currentPrefer);
   }, false);
 
-  videoElement.addEventListener('loadeddata', () => {
-    startPredictCamera();
-    showResults();
-  }, false);
-  
+  $('#face_landmark_tflite').attr('checked', 'checked');
+  $('#l-face_landmark_tflite').addClass('checked');
 });
 
 $(document).ready(() => {

@@ -1,23 +1,24 @@
 class Utils {
   constructor() {
-    this.tfModel;
-    this.labels;
+    this.rawModel;
     this.model;
-    this.inputTensor;
-    this.outputTensor;
+    this.initialized;
     this.updateProgress;
     this.modelFile;
-    this.labelsFile;
     this.inputSize;
     this.outputSize;
-    this.preOptions;
-    this.postOptions;
-    // this.preprocessCanvas = new OffscreenCanvas(224, 224);
-    this.preprocessCanvas = document.createElement('canvas');
-    this.preprocessCtx = this.preprocessCanvas.getContext('2d');    
+    this.inputTensor;
+    this.outputTensor;
+    this.inCanvas = document.createElement('canvas');
+    this.inCtx = this.inCanvas.getContext('2d');
+    this.outCanvas = document.createElement('canvas');
+    this.outCtx = this.outCanvas.getContext('2d');
+    this.backend = '';
+    this.prefer = '';
+    this.initialized = false;
     this.loaded = false;
     this.resolveGetRequiredOps = null;
-    this.initialized = false;
+    this.outstandingRequest = null;
   }
 
   async loadModel(newModel) {
@@ -28,28 +29,27 @@ class Utils {
     this.loaded = this.initialized = false;
     this.backend = this.prefer = '';
 
-    // set new model params
+    this.modelFile = newModel.modelFile;
     this.inputSize = newModel.inputSize;
     this.outputSize = newModel.outputSize;
-    this.modelFile = newModel.modelFile;
-    this.labelsFile = newModel.labelsFile;
-    this.preOptions = newModel.preOptions || {};
-    this.postOptions = newModel.postOptions || {};
-    this.numClasses = newModel.numClasses;
-    this.inputTensor = new Float32Array(newModel.inputSize.reduce((x,y) => x*y));
-    this.outputTensor = new Float32Array(newModel.outputSize.reduce((x,y) => x*y));
+    this.inputTensor = new Float32Array(this.product(this.inputSize));
+    this.outputTensor = new Float32Array(this.product(this.outputSize));
+    this.rawModel = null;
+    this.inCanvas.width = this.inputSize[1];
+    this.inCanvas.height = this.inputSize[0];
+    this.outCanvas.width = this.outputSize[1];
+    this.outCanvas.height = this.outputSize[0];
 
-    let result = await this.loadModelAndLabels(this.modelFile, this.labelsFile);
-    this.labels = result.text.split('\n');
-    console.log(`labels: ${this.labels}`);
-    let flatBuffer = new flatbuffers.ByteBuffer(result.bytes);
-    this.tfModel = tflite.Model.getRootAsModel(flatBuffer);
-    printTfLiteModel(this.tfModel);
+    if (!this.rawModel) {
+      let result = await this.loadTfLiteModel(this.modelFile);
+      let flatBuffer = new flatbuffers.ByteBuffer(result);
+      this.rawModel = tflite.Model.getRootAsModel(flatBuffer);
+      printTfLiteModel(this.rawModel);
+    }
 
     this.loaded = true;
     return 'SUCCESS';
   }
-
 
   async init(backend, prefer) {
     if (!this.loaded) {
@@ -62,9 +62,9 @@ class Utils {
     this.backend = backend;
     this.prefer = prefer;
     let kwargs = {
-      rawModel: this.tfModel,
+      rawModel: this.rawModel,
       backend: backend,
-      prefer: prefer,
+      prefer: prefer
     };
     this.model = new TFliteModelImporter(kwargs);
     let result = await this.model.createCompiledModel();
@@ -101,26 +101,22 @@ class Utils {
     }
   }
 
-  async predict() {
+  async predict(imageSource) {
     if (!this.initialized) return;
+    this.inCtx.drawImage(imageSource, 0, 0,
+                         this.inCanvas.width,
+                         this.inCanvas.height);
+    this.prepareInputTensor(this.inputTensor, this.inCanvas);
     let start = performance.now();
-    await this.model.compute([this.inputTensor], [this.outputTensor]);
+    let result = await this.model.compute([this.inputTensor], [this.outputTensor]);
     let elapsed = performance.now() - start;
-    return {
-      time: elapsed,
-      segMap: {
-        data: this.outputTensor,
-        outputShape: this.outputSize,
-        labels: this.labels,
-      },
-    };
+    return {time: elapsed.toFixed(2)};
   }
 
-  async loadModelAndLabels(modelUrl, labelsUrl) {
+  async loadTfLiteModel(modelUrl) {
     let arrayBuffer = await this.loadUrl(modelUrl, true, true);
     let bytes = new Uint8Array(arrayBuffer);
-    let text = await this.loadUrl(labelsUrl);
-    return {bytes: bytes, text: text};
+    return bytes;
   }
 
   async loadUrl(url, binary, progress) {
@@ -138,9 +134,9 @@ class Utils {
         this.outstandingRequest = null;
         if (request.readyState === 4) {
           if (request.status === 200) {
-            resolve(request.response);
+              resolve(request.response);
           } else {
-            reject(new Error('Failed to load ' + url + ' status: ' + request.status));
+              reject(new Error('Failed to load ' + url + ' status: ' + request.status));
           }
         }
       };
@@ -151,52 +147,70 @@ class Utils {
     });
   }
 
-  getFittedResolution(aspectRatio) {
+  // uint8 [0, 255] => float [-1, 1]
+  prepareInputTensor(tensor, canvas) {
     const height = this.inputSize[0];
     const width = this.inputSize[1];
-
-    // aspectRatio = width / height
-    if (aspectRatio > 1) {
-      return [width, Math.floor(height / aspectRatio)];
-    } else {
-      return [Math.floor(width / aspectRatio), height];
-    }
-  }
-
-  prepareInput(imgSrc) {
-    const height = this.inputSize[0];
-    const width = this.inputSize[1];
-
-    this.preprocessCanvas.width = width;
-    this.preprocessCanvas.height = height;
-
-    let imWidth = imgSrc.naturalWidth | imgSrc.videoWidth;
-    let imHeight = imgSrc.naturalHeight | imgSrc.videoHeight;
-    // assume deeplab_out.width == deeplab_out.height
-    let resizeRatio = Math.max(Math.max(imWidth, imHeight) / width, 1);
-    let scaledWidth = Math.floor(imWidth / resizeRatio);
-    let scaledHeight = Math.floor(imHeight / resizeRatio);
-
-    // better to keep resizeRatio at 1
-    // avoid scaling images in `drawImage`, especially in real time scenarios
-    this.preprocessCtx.drawImage(imgSrc, 0, 0, scaledWidth, scaledHeight);
-    const pixels = this.preprocessCtx.getImageData(0, 0, width, height).data;
-
-    const tensor = this.inputTensor;
     const channels = 3;
-    const imageChannels = 4;
-
-    // NHWC layout
+    const imageChannels = 4; // RGBA
+    const [mean, offset] = [127.5, 1];
+    if (canvas.width !== width || canvas.height !== height) {
+      throw new Error(`canvas.width(${canvas.width}) is not ${width} or canvas.height(${canvas.height}) is not ${height}`);
+    }
+    const ctx = canvas.getContext('2d');
+    const pixels = ctx.getImageData(0, 0, width, height).data;
     for (let y = 0; y < height; ++y) {
       for (let x = 0; x < width; ++x) {
         for (let c = 0; c < channels; ++c) {
-          let value = pixels[y*width*imageChannels + x*imageChannels + c];
-          tensor[y*width*channels + x*channels + c] = value / 127.5 - 1;
+          let value = pixels[y * width * imageChannels + x * imageChannels + c];
+          tensor[y * width * channels + x * channels + c] = value / mean - offset;
         }
       }
     }
+  }
 
-    return [scaledWidth, scaledHeight];
+  drawInput(canvas, imageElement) {
+    if (imageElement.width) {
+      canvas.width = imageElement.width / imageElement.height * canvas.height;
+    } else {
+      canvas.width = imageElement.videoWidth / imageElement.videoHeight * canvas.height;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+  }
+
+  // float [-1, 1] =>  uint8 [0, 255]
+  drawOutput(canvas, imageElement) {
+    const height = this.outputSize[0];
+    const width = this.outputSize[1];
+    const [mean, offset] = [127.5, 1];
+    const bytes = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < height * width; ++i) {
+      const j = i * 4;
+      let r, g, b, a;
+      r = (this.outputTensor[i * 3] + offset) * mean;
+      g = (this.outputTensor[i * 3 + 1] + offset) * mean;
+      b = (this.outputTensor[i * 3 + 2] + offset) * mean;
+      a = 255;
+      bytes[j + 0] = Math.round(r);
+      bytes[j + 1] = Math.round(g);
+      bytes[j + 2] = Math.round(b);
+      bytes[j + 3] = Math.round(a);
+    }
+    const imageData = new ImageData(bytes, width, height);
+
+    if (imageElement.width) {
+      canvas.width = imageElement.width / imageElement.height * canvas.height;
+    } else {
+      canvas.width = imageElement.videoWidth / imageElement.videoHeight * canvas.height;
+    }
+    this.outCtx.putImageData(imageData, 0, 0);
+    const ctx = canvas.getContext('2d'); 
+    ctx.drawImage(this.outCanvas, 0, 0, canvas.width, canvas.height);
+  }
+
+  product(array) {
+    return array.reduce((a, b) => a * b);
   }
 
   deleteAll() {
@@ -210,13 +224,16 @@ class Utils {
     if (!this.initialized) return;
 
     let iterators = [];
+    let models = [];
     for (let config of configs) {
-      let model = await new TFliteModelImporter({
-        rawModel: this.tfModel,
+      let importer = this.modelFile.split('.').pop() === 'tflite' ? TFliteModelImporter : OnnxModelImporter;
+      let model = await new importer({
+        rawModel: this.rawModel,
         backend: config.backend,
         prefer: config.prefer || null,
       });
       iterators.push(model.layerIterator([this.inputTensor], layerList));
+      models.push(model);
     }
 
     while (true) {
@@ -245,6 +262,12 @@ class Utils {
           let variance = sum / refOutput.value.tensor.length;
           console.debug(`var with ${configs[0].backend}: ${variance}`);
         }
+      }
+    }
+
+    for (let model of models) {
+      if (model._backend !== 'WebML') {
+        model._compilation._preparedModel._deleteAll();
       }
     }
   }

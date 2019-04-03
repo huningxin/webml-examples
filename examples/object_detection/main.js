@@ -1,39 +1,5 @@
-const videoElement = document.getElementById('video');
-const imageElement = document.getElementById('image');
-const inputElement = document.getElementById('input');
 const canvasElement = document.getElementById('canvas');
 const canvasShowElement = document.getElementById('canvasshow');
-const progressBar = document.getElementById('progressBar');
-
-let currentBackend = getSearchParamsBackend();
-let currentModel = getSearchParamsModel();
-let currentPrefer = getSearchParamsPrefer();
-let streaming = false;
-let stats = new Stats();
-let track;
-
-const showAlert = (error) => {
-  console.error(error);
-  let div = document.createElement('div');
-  // div.setAttribute('id', 'backendAlert');
-  div.setAttribute('class', 'backendAlert alert alert-warning alert-dismissible fade show');
-  div.setAttribute('role', 'alert');
-  div.innerHTML = `<strong>${error}</strong>`;
-  div.innerHTML += `<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>`;
-  let container = document.getElementById('container');
-  container.insertBefore(div, container.firstElementChild);
-}
-
-const updateProgress = (ev) => {
-  if (ev.lengthComputable) {
-    let totalSize = ev.total / (1000 * 1000);
-    let loadedSize = ev.loaded / (1000 * 1000);
-    let percentComplete = ev.loaded / ev.total * 100;    
-    percentComplete = percentComplete.toFixed(0);
-    progressBar.style = `width: ${percentComplete}%`;
-    updateLoading(loadedSize.toFixed(1), totalSize.toFixed(1), percentComplete);
-  }
-}
 
 let utils = new Utils(canvasElement, canvasShowElement);
 utils.updateProgress = updateProgress;    //register updateProgress function if progressBar element exist
@@ -48,21 +14,12 @@ const updateResult = (result) => {
   }
 }
 
-const logConfig = () => {
-  console.log(`Model: ${currentModel}, Backend: ${currentBackend}, Prefer: ${currentPrefer}`);
-}
-
-const errorHandler = (e) => {
-  showAlert(e);
-  showError(null, null);
-}
-
 const startPredictCamera = async () => {
   if (streaming) {
     try {
       stats.begin();
       let ret = await utils.predict(videoElement);
-      // updateResult(ret);
+      updateResult(ret);
       stats.end();
       setTimeout(startPredictCamera, 0);
     } catch (e) {
@@ -78,15 +35,10 @@ const utilsPredict = async (imageElement, backend, prefer) => {
     track.stop();
   }
   try {
-    // return immediately if model, backend, prefer are all unchanged
-    let init = await utils.init(backend, prefer);    
-    if (init == 'NOT_LOADED') {
-      return;
-    }
     await showProgress('Image inferencing ...');
     let ret = await utils.predict(imageElement);
     showResults();
-    // updateResult(ret);
+    updateResult(ret);
   }
   catch (e) {
     errorHandler(e);
@@ -96,17 +48,11 @@ const utilsPredict = async (imageElement, backend, prefer) => {
 const utilsPredictCamera = async (backend, prefer) => {
   streaming = true;
   try {
-    let init = await utils.init(backend, prefer);    
-    if (init == 'NOT_LOADED') {
-      return;
-    }
     let stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'environment' } });
     video.srcObject = stream;
     track = stream.getTracks()[0];
-    await showProgress('Camera inferencing ...');
-    startPredictCamera();
-    showResults();
-  } 
+    showProgress('Camera inferencing ...');
+  }
   catch (e) {
     errorHandler(e);
   }
@@ -116,22 +62,37 @@ const predictPath = (camera) => {
   (!camera) ? utilsPredict(imageElement, currentBackend, currentPrefer) : utilsPredictCamera(currentBackend, currentPrefer);
 }
 
+const utilsInit = async (backend, prefer) => {
+  // return immediately if model, backend, prefer are all unchanged
+  let init = await utils.init(backend, prefer);    
+  if (init == 'NOT_LOADED') {
+    return;
+  }
+}
+
 const updateScenario = async (camera = false) => {
   streaming = false;
   logConfig();
   predictPath(camera);
 }
 
-inputElement.addEventListener('change', (e) => {
-  let files = e.target.files;
-  if (files.length > 0) {
-    imageElement.src = URL.createObjectURL(files[0]);
+const updateBackend = async (camera = false, force = false) => {
+  if (force) {
+    utils.initialized = false;
   }
-}, false);
-
-imageElement.addEventListener('load', () => {
-  utilsPredict(imageElement, currentBackend, currentPrefer);
-}, false);
+  streaming = false;
+  try { utils.deleteAll(); } catch (e) { }
+  logConfig();
+  await showProgress('Updating backend ...');
+  try {
+    getOffloadOps(currentBackend, currentPrefer);
+    await utilsInit(currentBackend, currentPrefer);
+    predictPath(camera);
+  }
+  catch (e) {
+    errorHandler(e);
+  }
+}
 
 const main = async (camera = false) => {
   streaming = false;
@@ -140,7 +101,9 @@ const main = async (camera = false) => {
   await showProgress('Loading model ...');
   try {
     let model = objectDetectionModels.filter(f => f.modelFormatName == currentModel);
-    utils.changeModelParam(model[0]);
+    await utils.loadModel(model[0]);
+    getOffloadOps(currentBackend, currentPrefer);
+    await utilsInit(currentBackend, currentPrefer);
   } catch (e) {
     errorHandler(e);
   }

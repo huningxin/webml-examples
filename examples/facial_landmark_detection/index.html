@@ -3,11 +3,11 @@
 
 <head>
   <meta charset='utf-8'>
-  <title>Web Neural Network API - Examples - Object Detection</title>
+  <title>Web Neural Network API - Examples - Facial Landmark Detection</title>
   <meta content='width=device-width, initial-scale=1.0' name='viewport'>
-  <meta content='Object Detection, WebML, Web Machine Learning, Machine Learning for Web, Neural Networks, WebNN, WebNN API, Web Neural Network API'
+  <meta content='Facial Landmark Detection, WebML, Web Machine Learning, Machine Learning for Web, Neural Networks, WebNN, WebNN API, Web Neural Network API'
     name='keywords'>
-  <meta content='Object Detection, WebML, Web Machine Learning, Machine Learning for Web, Neural Networks, WebNN, WebNN API, Web Neural Network API'
+  <meta content='Facial Landmark Detection, WebML, Web Machine Learning, Machine Learning for Web, Neural Networks, WebNN, WebNN API, Web Neural Network API'
     name='description'>
   <link rel='apple-touch-icon' sizes='57x57' href='../static/img/favicon/apple-icon-57x57.png'>
   <link rel='apple-touch-icon' sizes='60x60' href='../static/img/favicon/apple-icon-60x60.png'>
@@ -30,7 +30,7 @@
   <link href='../static/css/style.css' rel='stylesheet'>
 </head>
 
-<body id='objectdetection'>
+<body id='faciallandmarkdetection'>
   <header id='header'>
     <div class='container'>
       <div id='logo' class='pull-left'>
@@ -82,20 +82,16 @@
             <th class='text-center'><a href='../model.html' title='View model details'>Model</a></th>
             <td>
               <img src='../static/img/l-tflite.png' alt='TensorFlow Lite Format' title='TensorFlow Lite Format'>
-              <input type='radio' class='d-none' name='m' id='ssd_mobilenet_v1_tflite' value='ssd_mobilenet_v1_tflite' checked>
-              <label id='l-ssd_mobilenet_v1_tflite' class='themodel' for='ssd_mobilenet_v1_tflite' title='SSD MobileNet v1'>SSD MobileNet v1</label>
-              <input type='radio' class='d-none' name='m' id='ssd_mobilenet_v1_quant_tflite' value='ssd_mobilenet_v1_quant_tflite' checked>
-              <label id='l-ssd_mobilenet_v1_quant_tflite' class='themodel' for='ssd_mobilenet_v1_quant_tflite' title='SSD MobileNet v1 Quant'>SSD MobileNet v1 Quant</label>
-              <input type='radio' class='d-none' name='m' id='ssd_mobilenet_v2_tflite' value='ssd_mobilenet_v2_tflite' checked>
-              <label id='l-ssd_mobilenet_v2_tflite' class='themodel' for='ssd_mobilenet_v2_tflite' title='SSD MobileNet v2'>SSD MobileNet v2</label>
-              <input type='radio' class='d-none' name='m' id='ssd_mobilenet_v2_quant_tflite' value='ssd_mobilenet_v2_quant_tflite' checked>
-              <label id='l-ssd_mobilenet_v2_quant_tflite' class='themodel' for='ssd_mobilenet_v2_quant_tflite' title='SSD MobileNet v2 Quant'>SSD MobileNet v2 Quant</label>
-              <input type='radio' class='d-none' name='m' id='ssdlite_mobilenet_v2_tflite' value='ssdlite_mobilenet_v2_tflite' checked>
-              <label id='l-ssdlite_mobilenet_v2_tflite' class='themodel' for='ssdlite_mobilenet_v2_tflite' title='SSDLite MobileNet v2'>SSDLite MobileNet v2</label>
-              <input type='radio' class='d-none' name='m' id='tiny_yolov2_coco_tflite' value='tiny_yolov2_coco_tflite' checked>
-              <label id='l-tiny_yolov2_coco_tflite' class='themodel' for='tiny_yolov2_coco_tflite' title='Tiny Yolo v2 COCO'>Tiny Yolo v2 COCO</label>
-              <input type='radio' class='d-none' name='m' id='tiny_yolov2_voc_tflite' value='tiny_yolov2_voc_tflite' checked>
-              <label id='l-tiny_yolov2_voc_tflite' class='themodel' for='tiny_yolov2_voc_tflite' title='Tiny Yolo v2 VOC'>Tiny Yolo v2 VOC</label>
+              <input type='radio' class='d-none' name='m' id='ssd_mobilenetv1_face_tflite' value='ssd_mobilenetv1_face_tflite' checked>
+              <label id='l-ssd_mobilenetv1_face_tflite' class='themodel' for='ssd_mobilenetv1_face_tflite' title='SSD MobileNet v1'>SSD MobileNet v1</label>
+              <input type='radio' class='d-none' name='m' id='ssd_mobilenetv2_face_tflite' value='ssd_mobilenetv2_face_tflite' checked>
+              <label id='l-ssd_mobilenetv2_face_tflite' class='themodel' for='ssd_mobilenetv2_face_tflite' title='SSD MobileNet v2'>SSD MobileNet v2</label>
+              <input type='radio' class='d-none' name='m' id='ssdlite_mobilenetv2_face_tflite' value='ssdlite_mobilenetv2_face_tflite' checked>
+              <label id='l-ssdlite_mobilenetv2_face_tflite' class='themodel' for='ssdlite_mobilenetv2_face_tflite' title='SSDLite MobileNet v2'>SSDLite MobileNet v2</label>
+              <input type='radio' class='d-none' name='m' id='tiny_yolov2_face_tflite' value='tiny_yolov2_face_tflite' checked>
+              <label id='l-tiny_yolov2_face_tflite' class='themodel' for='tiny_yolov2_face_tflite' title='Tiny Yolo v2'>Tiny Yolo v2</label>
+              <input type='radio' class='d-none' name='l' id='face_landmark_tflite' value='face_landmark_tflite' checked>
+              <label id='l-face_landmark_tflite' class='themodel' for='face_landmark_tflite' title='Deep Alignment Network'>DAN (TFlite)</label>
             </td>
           </tr>
           <tr class='backend'>
@@ -133,7 +129,7 @@
     <div class='container' id='container'>
       <a id='extra' href='#' class='mb-1 mt-3'>
         <h3 class='text-center ex' id='ictitle'>
-          Object Detection
+          Facial Landmark Detection
         </h3>
         <span class='fa chevron-up'>
           <svg aria-hidden='true' data-prefix='fas' data-icon='chevron-up' class='svg-inline--fa fa-chevron-up fa-w-14'
@@ -248,7 +244,8 @@
   </section>
 
   <img id='image' crossorigin='anonymous' class='img-fluid' alt='Responsive image' src='./img/image1.jpg'>
-  <canvas id='canvas' width=640 height=480></canvas>
+  <canvas id='canvas' width=300 height=300></canvas>
+  <canvas id='canvas1' width=128 height=128></canvas>
   <video id='video' autoplay playsinline></video>
 
   <footer>
@@ -306,6 +303,8 @@
   <script src="../util/tflite/TFliteModelImporter.js"></script>
   <script src="../util/decoders/SsdDecoder.js"></script>
   <script src="../util/decoders/Yolo2Decoder.js"></script>
+  <script src="../util/faceDetector.js"></script>
+  <script src="DrawOutput.js"></script>
   <script src='utils.js'></script>
   <script src='../static/js/main.common.js'></script>
   <script src='main.js'></script>

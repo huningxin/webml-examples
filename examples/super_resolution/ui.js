@@ -1,17 +1,23 @@
 $(document).ready(() => {
 
-  updateTitle('Image Classification', ub, up, um, ut);
+  if(um) {
+    let umupper = um.replace('_4', 'x4').toUpperCase();
+    updateTitle('Super Resolution', ub, up, um, ut);
+  }
 
   $('input:radio[name=bp]').click(() => {
-    updateTitle('Image Classification', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    let umupper = um.replace('_4', 'x4').toUpperCase();
+    updateTitle('Super Resolution', currentBackend, currentPrefer, `${umupper}`, `${ut}`);
   });
 
   $('input:radio[name=bw]').click(() => {
-    updateTitle('Image Classification', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    let umupper = um.replace('_4', 'x4').toUpperCase();
+    updateTitle('Super Resolution', currentBackend, currentPrefer, `${umupper}`, `${ut}`);
   });
 
   $('input:radio[name=m]').click(() => {
-    updateTitle('Image Classification', currentBackend, currentPrefer, `${um}`, `${ut}`);
+    let umupper = um.replace('_4', 'x4').toUpperCase();
+    updateTitle('Super Resolution', currentBackend, currentPrefer, `${umupper}`, `${ut}`);
     $('.offload').hide();
   });
 
