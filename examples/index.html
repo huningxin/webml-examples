@@ -448,7 +448,19 @@
   <script src='static/lib/superfish/superfish.min.js'></script>
   <script src='static/lib/stickyjs/sticky.js'></script>
   <script src='static/js/ui.common.js'></script>
-
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/webml-examples/sw.js').then(function(registration) {
+          // Registration was successful
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          // registration failed :(
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
 </body>
 
 </html>
