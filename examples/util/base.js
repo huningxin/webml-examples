@@ -82,7 +82,21 @@ const imageClassificationModels = [{
     std: [127.5, 127.5, 127.5],
   },
   intro: 'Inception-v3 is trained for the ImageNet Large Visual Recognition Challenge.',
-  paperUrl: 'https://arxiv.org/abs/1512.00567'
+  paperUrl: 'http://arxiv.org/abs/1512.00567'
+}, {
+  modelName: 'Inception v3 Quant (TFLite)',
+  modelFormatName: 'inception_v3_quant_tflite',
+  isQuantized: true,
+  modelSize: '23.9MB',
+  inputSize: [299, 299, 3],
+  outputSize: 1001,
+  modelFile: '../image_classification/model/inception_v3_quant.tflite',
+  labelsFile: '../image_classification/model/labels1001.txt',
+  postOptions: {
+    softmax: true,
+  },
+  intro: 'Quantized version of Inception v3.',
+  paperUrl: 'https://arxiv.org/abs/1806.08342'
 }, {
   modelName: 'Inception v4 (TFLite)',
   modelFormatName: 'inception_v4_tflite',
@@ -96,6 +110,17 @@ const imageClassificationModels = [{
     std: [127.5, 127.5, 127.5],
   },
   intro: 'Inception architecture that has been shown to achieve very good performance at relatively low computational cost.',
+  paperUrl: 'https://arxiv.org/abs/1602.07261'
+}, {
+  modelName: 'Inception v4 Quant (TFLite)',
+  modelFormatName: 'inception_v4_quant_tflite',
+  isQuantized: true,
+  modelSize: '42.9MB',
+  inputSize: [299, 299, 3],
+  outputSize: 1001,
+  modelFile: '../image_classification/model/inception_v4_299_quant.tflite',
+  labelsFile: '../image_classification/model/labels1001.txt',
+  intro: 'Quantized version of Inception v4.',
   paperUrl: 'https://arxiv.org/abs/1602.07261'
 }, {
   modelName: 'Squeezenet (TFLite)',
@@ -578,14 +603,14 @@ const faceDetectionModels = [{
 }];
 
 const facialLandmarkDetectionModels = [{
-  modelName: 'DAN (TFlite)',
+  modelName: 'SimpleCNN (TFlite)',
   modelFormatName: 'face_landmark_tflite',
   modelSize: '29.4MB',
   modelFile: '../facial_landmark_detection/model/face_landmark.tflite',
   inputSize: [128, 128, 3],
   outputSize: 136,
-  intro: 'Converted from a pre-trained Deep Alignment Network',
-  paperUrl: 'https://arxiv.org/abs/1612.08242'
+  intro: 'Converted from a pre-trained Simple CNN model',
+  paperUrl: 'https://www.sciencedirect.com/science/article/pii/S0262885615001341'
 }];
 
 const getOS = () => {

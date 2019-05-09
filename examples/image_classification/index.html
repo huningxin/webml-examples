@@ -111,10 +111,18 @@
               <label id='l-inception_v3_tflite' class='themodel' for='inception_v3_tflite'
                 title='Inception v3'>Inception
                 v3</label>
+              <input type='radio' class='d-none' name='m' id='inception_v3_quant_tflite' value='inception_v3_quant_tflite'>
+              <label id='l-inception_v3_quant_tflite' class='themodel' for='inception_v3_quant_tflite'
+                title='Inception v3 Quant'>Inception
+                v3 Quant</label>
               <input type='radio' class='d-none' name='m' id='inception_v4_tflite' value='inception_v4_tflite'>
               <label id='l-inception_v4_tflite' class='themodel' for='inception_v4_tflite'
                 title='Inception v4'>Inception
                 v4</label>
+              <input type='radio' class='d-none' name='m' id='inception_v4_quant_tflite' value='inception_v4_quant_tflite'>
+              <label id='l-inception_v4_quant_tflite' class='themodel' for='inception_v4_quant_tflite'
+                title='Inception v4 Quant'>Inception
+                v4 Quant</label>
               <input type='radio' class='d-none' name='m' id='inception_resnet_v2_tflite'
                 value='inception_resnet_v2_tflite'>
               <label id='l-inception_resnet_v2_tflite' class='themodel' for='inception_resnet_v2_tflite'
@@ -142,27 +150,27 @@
             </td>
           </tr>
           <tr class='backend'>
-            <th class='text-center'>Backend</th>
+            <th class='text-center backendtitle'>Backend</th>
             <td>
+              <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="backendswitch">
+                  <label class="custom-control-label" for="backendswitch">Dual</label>
+              </div>
               <div class='g b-polyfill'>
-                <span>Polyfill</span>
+                <span id='backendpolyfilltitle'>Polyfill</span>
                 <input type='radio' name='bp' class='d-none' id='WASM' value='WASM'>
-                <label id='l-WASM' for='WASM'
-                  title='Compiled Tensorflow Lite C++ kernels to WebAssembly format'>WASM</label>
+                <label id='l-WASM' for='WASM'>WASM</label>
                 <input type='radio' name='bp' class='d-none' id='WebGL' value='WebGL'>
-                <label id='l-WebGL' for='WebGL' title='Tensorflow.js WebGL kernel'>WebGL</label>
+                <label id='l-WebGL' for='WebGL'>WebGL</label>
               </div>
               <div class='g b-webnn'>
-                <span>WebNN</span>
+                <span id='backendwebnntitle'>WebNN</span>
                 <input type='radio' name='bw' class='d-none' id='fast' value='fast'>
-                <label id='l-fast' for='fast' class='lml'
-                  title='Returning a single answer as fast as possible, even if this causes more power consumption.'>FAST_SINGLE_ANSWER</label>
+                <label id='l-fast' for='fast' class='lml'>FAST_SINGLE_ANSWER</label>
                 <input type='radio' name='bw' class='d-none' id='sustained' value='sustained'>
-                <label id='l-sustained' for='sustained' class='lml'
-                  title='Maximizing the throughput of successive frames, for example when processing successive frames coming from the camera.'>SUSTAINED_SPEED</label>
+                <label id='l-sustained' for='sustained' class='lml'>SUSTAINED_SPEED</label>
                 <input type='radio' name='bw' class='d-none' id='low' value='low'>
-                <label id='l-low' for='low' class='lml'
-                  title='Executing in a way that minimizes battery drain.'>LOW_POWER</label>
+                <label id='l-low' for='low' class='lml'>LOW_POWER</label>
               </div>
             </td>
           </tr>
@@ -377,6 +385,26 @@
       </path>
     </svg>
   </a>
+
+  <div class="modal fade" id="subgraphModal" tabindex="-1" role="dialog" aria-labelledby="subgraphModalTitle"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modaltitle">Subgraphs Summary</h5>
+        </div>
+        <div class="modal-body">
+          <div id="timeline">
+            <ul class="timeline" id="subgraph">
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="modal-btn" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src='../static/lib/jquery/jquery.min.js'></script>
   <script src='../static/lib/jquery/jquery-migrate-3.0.1.min.js'></script>
